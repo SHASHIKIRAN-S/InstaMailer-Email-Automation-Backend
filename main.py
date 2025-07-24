@@ -1,10 +1,10 @@
 # backend/main.py
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Body
 from sqlmodel import SQLModel, Session, create_engine, select
-from backend.models import Draft
-from backend.email_generator import EmailGenerator
-from backend.mailer import send_email
-from backend.config import get_settings
+from models import Draft
+from email_generator import EmailGenerator
+from mailer import send_email
+from config import get_settings
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
