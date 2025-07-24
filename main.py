@@ -1,7 +1,7 @@
 # backend/main.py
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Body
 from sqlmodel import SQLModel, Session, create_engine, select
-from backend.models import Draft
+from models import Draft
 from backend.email_generator import EmailGenerator
 from backend.mailer import send_email
 from backend.config import get_settings
