@@ -7,7 +7,7 @@ import requests
 import json
 import logging
 from typing import Optional, Dict
-from backend.config import get_settings
+from config import get_settings
 
 logger = logging.getLogger(__name__)
 
