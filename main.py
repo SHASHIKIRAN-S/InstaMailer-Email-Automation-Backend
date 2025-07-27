@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import logging
+import uvicorn
 from datetime import datetime, timedelta, timezone
 from collections import Counter
 from typing import List, Dict, Any, Optional
@@ -241,3 +242,6 @@ def update_draft(draft_id: int, content: str = Body(...)):
         draft.content = content
         session.commit()
         return {"message": "Draft updated"}
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=10000, reload=False)
+        
