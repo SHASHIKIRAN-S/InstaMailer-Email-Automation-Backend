@@ -1,4 +1,3 @@
-# backend/main.py
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Body
 from sqlmodel import SQLModel, Session, create_engine, select
 from models import Draft
@@ -43,12 +42,13 @@ app = FastAPI(lifespan=lifespan)
 
 email_generator = EmailGenerator()
 
-# Allow frontend origins
+# Allow frontend origins (add your deployed frontend URL below)
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://localhost:5137",
-    "http://127.0.0.1:5137",
+    "https://your-frontend.onrender.com",       # ✅ add actual deployed frontend URL
+    "https://your-frontend.netlify.app",        # ✅ if Netlify
+    "https://your-frontend.vercel.app",         # ✅ if Vercel
 ]
 
 app.add_middleware(
@@ -76,6 +76,10 @@ class EmailDraftResponse(BaseModel):
     created_at: datetime
     sent_at: Optional[datetime] = None
     subject: Optional[str] = None
+
+@app.get("/")
+def root():
+    return {"message": "InstaMailer Backend is running."}
 
 @app.post("/generate")
 async def generate(
@@ -124,7 +128,6 @@ def send(draft_id: int):
             )
 
             if success:
-                # Update draft status to sent
                 draft.status = "sent"
                 draft.sent_at = datetime.now(timezone.utc)
                 session.commit()
@@ -142,7 +145,6 @@ def send(draft_id: int):
 
 @app.get("/emails", response_model=List[EmailDraftResponse])
 def get_emails():
-    """Get all email drafts"""
     try:
         with Session(engine) as session:
             statement = select(Draft).order_by(Draft.created_at.desc())
@@ -154,48 +156,42 @@ def get_emails():
 
 @app.get("/stats")
 def get_stats():
-    """Get email statistics"""
     try:
         with Session(engine) as session:
-            # Get all drafts
             statement = select(Draft)
             drafts = session.exec(statement).all()
-            
-            # Calculate stats
+
             total_sent = len([d for d in drafts if d.status == "sent"])
             total_drafts = len([d for d in drafts if d.status == "draft"])
             total_failed = len([d for d in drafts if d.status == "failed"])
             total_emails = len(drafts)
-            
+
             success_rate = (total_sent / total_emails * 100) if total_emails > 0 else 0
-            
-            # Recent activity (last 7 days)
+
             week_ago = datetime.now(timezone.utc) - timedelta(days=7)
             recent_activity = len([d for d in drafts if ensure_aware(d.created_at) >= week_ago])
-            
-            # Popular tones
+
             tone_counter = Counter(d.tone for d in drafts)
             popular_tones = dict(tone_counter.most_common())
-            
-            # Monthly stats (last 6 months)
+
             monthly_stats = []
             for i in range(6):
-                month_start = datetime.now(timezone.utc).replace(day=1) - timedelta(days=30*i)
+                month_start = datetime.now(timezone.utc).replace(day=1) - timedelta(days=30 * i)
                 month_end = month_start.replace(day=1) + timedelta(days=32)
                 month_end = month_end.replace(day=1) - timedelta(days=1)
-                
+
                 month_drafts = [d for d in drafts if month_start <= ensure_aware(d.created_at) <= month_end]
                 month_sent = len([d for d in month_drafts if d.status == "sent"])
                 month_draft_count = len([d for d in month_drafts if d.status == "draft"])
-                
+
                 monthly_stats.append({
                     "month": month_start.strftime("%b"),
                     "sent": month_sent,
                     "drafts": month_draft_count
                 })
-            
-            monthly_stats.reverse()  # Show oldest to newest
-            
+
+            monthly_stats.reverse()
+
             return {
                 "total_sent": total_sent,
                 "total_drafts": total_drafts,
@@ -205,24 +201,23 @@ def get_stats():
                 "popular_tones": popular_tones,
                 "monthly_stats": monthly_stats
             }
-            
+
     except Exception as e:
         logger.error(f"Error calculating stats: {e}")
         raise HTTPException(status_code=500, detail="Error calculating stats")
 
 @app.delete("/emails/{draft_id}")
 def delete_email(draft_id: int):
-    """Delete an email draft"""
     try:
         with Session(engine) as session:
             draft = session.get(Draft, draft_id)
             if not draft:
                 raise HTTPException(status_code=404, detail="Draft not found")
-            
+
             session.delete(draft)
             session.commit()
             return {"message": "Email deleted successfully"}
-            
+
     except HTTPException:
         raise
     except Exception as e:
@@ -242,6 +237,6 @@ def update_draft(draft_id: int, content: str = Body(...)):
         draft.content = content
         session.commit()
         return {"message": "Draft updated"}
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=10000, reload=False)
-        
