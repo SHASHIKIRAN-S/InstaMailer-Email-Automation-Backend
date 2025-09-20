@@ -46,6 +46,7 @@ email_generator = EmailGenerator()
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://insta-mailer-email-automation-inter.vercel.app",  # ✅ Your Vercel frontend
     "https://your-frontend.onrender.com",       # ✅ add actual deployed frontend URL
     "https://your-frontend.netlify.app",        # ✅ if Netlify
     "https://your-frontend.vercel.app",         # ✅ if Vercel
