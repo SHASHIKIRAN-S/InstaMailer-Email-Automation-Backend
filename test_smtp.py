@@ -44,8 +44,7 @@ def main():
         success = send_email(
             to_email=test_email,
             subject="SMTP Configuration Test",
-            content="This is a test email to verify your SMTP configuration is working correctly.\n\nIf you receive this email, your SMTP settings are properly configured!",
-            content_type="plain"
+            content="This is a test email to verify your SMTP configuration is working correctly.\n\nIf you receive this email, your SMTP settings are properly configured!"
         )
         
         if success:

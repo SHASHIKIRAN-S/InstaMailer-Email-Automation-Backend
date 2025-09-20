@@ -102,17 +102,51 @@ class EmailGenerator:
             Dictionary with 'subject' and 'content' keys
         """
         try:
+            # Check if API is configured
+            if not self.settings.email_api_configured:
+                logger.warning("Email API not configured, generating basic email from prompt")
+                return self._generate_fallback_email(prompt, tone)
+            
             content = self.generate_email_content(prompt, tone)
             if not content:
-                logger.warning("Failed to generate content, using prompt as fallback")
-                return {"subject": "Email", "content": prompt}
+                logger.warning("Failed to generate content, using fallback")
+                return self._generate_fallback_email(prompt, tone)
 
             subject = self._extract_subject_from_content(content, prompt)
             return {"subject": subject, "content": content}
 
         except Exception as e:
             logger.error(f"Error generating email with subject: {e}")
-            return {"subject": "Email", "content": prompt}
+            return self._generate_fallback_email(prompt, tone)
+    
+    def _generate_fallback_email(self, prompt: str, tone: str) -> Dict[str, str]:
+        """
+        Generate a basic email when API is not available
+        
+        Args:
+            prompt: User's prompt
+            tone: Email tone
+            
+        Returns:
+            Dictionary with 'subject' and 'content' keys
+        """
+        # Create a basic email structure
+        subject = self._extract_subject_from_content(prompt, prompt)
+        
+        # Generate basic email content based on tone
+        if tone.lower() in ["professional", "formal"]:
+            greeting = "Dear Sir/Madam,"
+            closing = "Best regards,\n[Your Name]"
+        elif tone.lower() in ["casual", "friendly"]:
+            greeting = "Hi there,"
+            closing = "Best,\n[Your Name]"
+        else:
+            greeting = "Hello,"
+            closing = "Regards,\n[Your Name]"
+        
+        content = f"{greeting}\n\n{prompt}\n\n{closing}"
+        
+        return {"subject": subject, "content": content}
 
     def _extract_subject_from_content(self, content: str, prompt: str) -> str:
         """

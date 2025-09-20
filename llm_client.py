@@ -4,7 +4,7 @@ LLM Client for interacting with OpenRouter API.
 
 import requests
 import logging
-from backend.config import OPENROUTER_API_KEY, OPENROUTER_MODEL
+from config import OPENROUTER_API_KEY, OPENROUTER_MODEL
 
 logger = logging.getLogger(__name__)
 
